@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Hero Phrases</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@300;400;600;700&family=Roboto:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/stylesheets/style.css" />
+  </head>
+  <body class="admin-page">
+    <main class="admin-list">
+      <div class="admin-header">
+        <h1>Hero Phrases</h1>
+        <a class="admin-button" href="/admin">ダッシュボードへ戻る</a>
+      </div>
+      <% if (error) { %>
+        <p class="admin-error"><%= error %></p>
+      <% } %>
+      <form class="admin-form" action="/admin/hero-phrases" method="post">
+        <label>
+          テキスト
+          <input type="text" name="text" required />
+        </label>
+        <label class="admin-checkbox">
+          <input type="checkbox" name="isPublished" checked />
+          公開
+        </label>
+        <button type="submit">追加</button>
+      </form>
+      <form action="/admin/hero-phrases/bulk" method="post" data-admin-form>
+        <table>
+          <thead>
+            <tr>
+              <th>順序</th>
+              <th>テキスト</th>
+              <th>公開</th>
+              <th>更新日</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody data-draggable-list>
+            <% phrases.forEach(function(phrase, index) { %>
+              <tr draggable="true">
+                <td>
+                  <span class="drag-handle">⋮⋮</span>
+                  <input type="hidden" name="ids" value="<%= phrase.id %>" />
+                  <input type="hidden" name="published" value="<%= phrase.isPublished ? 1 : 0 %>" data-published-input />
+                  <%= index + 1 %>
+                </td>
+                <td>
+                  <input type="text" name="texts" value="<%= phrase.text %>" required />
+                </td>
+                <td>
+                  <label class="admin-checkbox">
+                    <input
+                      type="checkbox"
+                      data-published-checkbox
+                      <%= phrase.isPublished ? 'checked' : '' %>
+                    />
+                    <span><%= phrase.isPublished ? '公開' : '下書き' %></span>
+                  </label>
+                </td>
+                <td><%= phrase.updatedAt.toISOString().slice(0, 10) %></td>
+                <td class="admin-actions">
+                  <button type="submit" formaction="/admin/hero-phrases/<%= phrase.id %>/delete" formmethod="post">削除</button>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+        <div class="admin-footer">
+          <button type="submit">並び順と内容を保存</button>
+        </div>
+      </form>
+    </main>
+    <script src="/javascripts/admin.js"></script>
+  </body>
+</html>

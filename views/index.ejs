@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@300;400;600;700&family=Roboto:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+  </head>
+  <body>
+    <div id="top"></div>
+    <header class="site-header">
+      <div class="brand">
+        <span class="brand-title">PORTFOLIO</span>
+        <span class="brand-sub">Gakuto Ito</span>
+      </div>
+      <nav class="site-nav">
+        <a href="#top">Home</a>
+        <a href="#about">About</a>
+        <a href="#topics">Topics</a>
+        <a href="#contact">Contact</a>
+      </nav>
+    </header>
+
+    <main>
+      <% const heroRand = function(input) { 
+           const str = String(input || '');
+           let hash = 0;
+           for (let i = 0; i < str.length; i++) {
+             hash = ((hash << 5) - hash) + str.charCodeAt(i);
+             hash |= 0;
+           }
+           const normalized = Math.abs(hash % 1000) / 999;
+           return normalized.toFixed(3);
+         };
+         const heroScale = function(input) {
+           const str = String(input || '');
+           let hash = 0;
+           for (let i = 0; i < str.length; i++) {
+             hash = ((hash << 5) - hash) + str.charCodeAt(i);
+             hash |= 0;
+           }
+           const bucket = Math.abs(hash) % 3;
+           const scales = ['1.12', '1.28', '1.45'];
+           return scales[bucket];
+         };
+      %>
+      <section id="home" class="hero">
+        <div class="hero-bg">
+          <% if (heroImages.length === 0) { %>
+            <div class="hero-bg-placeholder"></div>
+          <% } else { %>
+            <div class="hero-bg-track hero-bg-track--boke">
+              <% heroImages.filter(function(_, index) { return index % 2 === 0; }).forEach(function(image) { %>
+                <div class="hero-bg-item hero-bg-item--boke" style="--hero-img-x-rand: <%= heroRand(String(image.id || '') + (image.imageUrl || '') + '-bx') %>; --hero-img-y-rand: <%= heroRand(String(image.id || '') + (image.imageUrl || '') + '-by') %>; --hero-img-scale: <%= heroScale(String(image.id || '') + (image.imageUrl || '') + '-bs') %>;">
+                  <img src="<%= image.imageUrl %>" alt="<%= image.altText || 'hero image' %>" />
+                </div>
+              <% }) %>
+              <% heroImages.filter(function(_, index) { return index % 2 === 0; }).forEach(function(image) { %>
+                <div class="hero-bg-item hero-bg-item--boke" style="--hero-img-x-rand: <%= heroRand(String(image.id || '') + (image.imageUrl || '') + '-bx') %>; --hero-img-y-rand: <%= heroRand(String(image.id || '') + (image.imageUrl || '') + '-by') %>; --hero-img-scale: <%= heroScale(String(image.id || '') + (image.imageUrl || '') + '-bs') %>;">
+                  <img src="<%= image.imageUrl %>" alt="<%= image.altText || 'hero image' %>" />
+                </div>
+              <% }) %>
+            </div>
+            <div class="hero-bg-track">
+              <% heroImages.forEach(function(image) { %>
+                <div class="hero-bg-item" style="--hero-img-x-rand: <%= heroRand(String(image.id || '') + (image.imageUrl || '') + '-x') %>; --hero-img-y-rand: <%= heroRand(String(image.id || '') + (image.imageUrl || '') + '-y') %>; --hero-img-scale: <%= heroScale(String(image.id || '') + (image.imageUrl || '') + '-s') %>;">
+                  <img src="<%= image.imageUrl %>" alt="<%= image.altText || 'hero image' %>" />
+                </div>
+              <% }) %>
+              <% heroImages.forEach(function(image) { %>
+                <div class="hero-bg-item" style="--hero-img-x-rand: <%= heroRand(String(image.id || '') + (image.imageUrl || '') + '-x') %>; --hero-img-y-rand: <%= heroRand(String(image.id || '') + (image.imageUrl || '') + '-y') %>; --hero-img-scale: <%= heroScale(String(image.id || '') + (image.imageUrl || '') + '-s') %>;">
+                  <img src="<%= image.imageUrl %>" alt="<%= image.altText || 'hero image' %>" />
+                </div>
+              <% }) %>
+            </div>
+          <% } %>
+        </div>
+        <div class="hero-content">
+          <div class="hero-boxes" data-phrases='<%= JSON.stringify(heroPhrases.map(function(p){ return p.text; })) %>'>
+            <% for (var i = 0; i < 5; i++) { %>
+              <div class="hero-box">
+                <div class="hero-box-inner">
+                  <div class="hero-box-rot">
+                    <div class="hero-box-face hero-box-front"><span></span></div>
+                    <div class="hero-box-face hero-box-right"><span></span></div>
+                    <div class="hero-box-face hero-box-back"><span></span></div>
+                    <div class="hero-box-face hero-box-left"><span></span></div>
+                    <div class="hero-box-face hero-box-top"><span></span></div>
+                    <div class="hero-box-face hero-box-bottom"><span></span></div>
+                  </div>
+                </div>
+              </div>
+            <% } %>
+            <span class="hero-box-de">で</span>
+          </div>
+          <h1 class="hero-title">
+            世界をより楽しく、より大きく
+          </h1>
+        </div>
+      </section>
+
+      <section class="message">
+        <div class="message-inner">
+          <div class="message-text">
+            <p>
+              テクノロジー、デザイン
+              あらゆるものが進歩し続ける現代、
+              一分一秒、次々と新たなサービスやプロダクトが生まれています。
+              
+            </p>
+          </div>
+          <div class="message-image">
+            <img src="/images/hunting.png" alt="message image" />
+          </div>
+        </div>
+      </section>
+
+      <section id="about" class="about">
+        <h2>About</h2>
+        <div class="about-card">
+          <div class="about-text">
+            <p class="about-line about-name-furigana">いとう がくと</p>
+            <p class="about-line about-name">伊藤 楽大</p>
+            <p class="about-line">静岡県浜松市出身</p>
+            <p class="about-line">神山まるごと高等専門学校</p>
+            <p class="about-line about-line-last">デザイン・エンジニアリング学科 3年</p>
+            <p class="about-body">
+              情報工学を専門とし、web開発やアプリ開発を中心に据え、新規事業開発や主催イベントの開催など、幅広く活動を行ってきました。
+いずれの活動においても主体性を発揮し、それぞれの理想的な結果の実現に貢献してきました。
+また、農業や狩猟などに関する知見もあり、多分野を横断した多角的な思考および現場の声に則したプロダクト開発を行う点も私の強みです。
+            </p>
+          </div>
+          <div class="about-image"></div>
+        </div>
+      </section>
+
+      <section id="topics" class="topics">
+        <div class="topics-header">
+          <h2>Topics</h2>
+          <div class="topics-filter">
+            <select data-filter-category>
+              <option value="all">categories</option>
+              <% categories.forEach(function(category) { %>
+                <option value="<%= category.name %>"><%= category.name %></option>
+              <% }) %>
+            </select>
+            <select data-filter-tag>
+              <option value="all">tag</option>
+              <% tags.forEach(function(tag) { %>
+                <option value="<%= tag.name %>"><%= tag.name %></option>
+              <% }) %>
+            </select>
+          </div>
+        </div>
+        <div class="topics-grid" id="topics-list">
+          <% topics.forEach(function(topic, index) { %>
+            <a
+              class="topic-card <%= index >= 6 ? 'is-collapsed' : '' %>"
+              data-collapsible="<%= index >= 6 ? 'true' : 'false' %>"
+              href="/topics/<%= topic.id %>"
+              data-topic-card
+              data-category="<%= topic.category ? topic.category.name : '' %>"
+              data-tags="<%= topic.tags.map(function(tag) { return tag.name; }).join(',') %>"
+            >
+              <div class="topic-thumb">
+                <% if (topic.imageUrl) { %>
+                  <img src="<%= topic.imageUrl %>" alt="<%= topic.title %>" />
+                <% } else { %>
+                  <div class="topic-thumb-empty">No image</div>
+                <% } %>
+              </div>
+              <div class="topic-body">
+                <div class="topic-meta">
+                  <% if (topic.category) { %>
+                    <span class="topic-category"><%= topic.category.name %></span>
+                  <% } %>
+                  <div class="topic-tags">
+                    <% topic.tags.forEach(function(tag) { %>
+                      <span>#<%= tag.name %></span>
+                    <% }) %>
+                  </div>
+                </div>
+                <h3><%= topic.title %></h3>
+                <p><%= topic.excerpt || topic.body.slice(0, 80) %></p>
+                <span class="topic-hover">クリックで詳細を表示</span>
+              </div>
+            </a>
+          <% }) %>
+        </div>
+        <% if (topics.length > 6) { %>
+          <button class="topics-more" type="button" data-show-more data-target="#topics-list" data-expanded="false">
+            さらに表示↓
+          </button>
+        <% } %>
+      </section>
+
+      <section id="news" class="news">
+        <h2>News</h2>
+        <% if (news.length === 0) { %>
+          <p class="news-empty">準備中です。</p>
+        <% } else { %>
+          <div class="news-list" id="news-list">
+            <% news.forEach(function(item, index) { %>
+              <div class="news-row <%= index >= 6 ? 'is-collapsed' : '' %>" data-collapsible="<%= index >= 6 ? 'true' : 'false' %>">
+                <a class="news-link" href="<%= item.url %>" target="_blank" rel="noopener">
+                  <span class="news-title"><%= item.title %></span>
+                  <% if (item.subtitle) { %>
+                    <span class="news-subtitle"><%= item.subtitle %></span>
+                  <% } %>
+                  <span class="news-hint">リンクを開く</span>
+                </a>
+                <span class="news-date"><%= item.interviewDate.toISOString().slice(0, 10) %></span>
+              </div>
+            <% }) %>
+          </div>
+          <% if (news.length > 6) { %>
+            <button class="news-more" type="button" data-show-more data-target="#news-list" data-expanded="false">
+              さらに表示↓
+            </button>
+          <% } %>
+        <% } %>
+      </section>
+
+      <section id="contact" class="contact">
+        <h2>Contact</h2>
+        <form class="contact-form" action="/contact" method="post">
+          <label>
+            名前（必須）
+            <input type="text" name="name" required />
+          </label>
+          <label>
+            メールアドレス（必須）
+            <input type="email" name="email" required />
+          </label>
+          <label>
+            電話番号
+            <input type="text" name="phone-number" />
+          </label>
+          <label>
+            お問い合わせ内容（必須）
+            <textarea name="message" rows="6" required></textarea>
+          </label>
+          <button type="submit">送信</button>
+        </form>
+      </section>
+    </main>
+    <canvas class="hero-gl-canvas" data-hero-gl></canvas>
+    <footer class="site-footer">
+      <p>@2026 Gakuto Ito</p>
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+    <script src="/javascripts/main.js"></script>
+  </body>
+</html>

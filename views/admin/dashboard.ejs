@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Admin Dashboard</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@300;400;600;700&family=Roboto:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/stylesheets/style.css" />
+  </head>
+  <body class="admin-page">
+    <main class="admin-dashboard">
+      <h1>Admin</h1>
+      <nav class="admin-nav">
+        <a href="/admin/topics">Topics</a>
+        <a href="/admin/categories">Categories</a>
+        <a href="/admin/tags">Tags</a>
+        <a href="/admin/hero-images">Hero Images</a>
+        <a href="/admin/hero-phrases">Hero Phrases</a>
+        <a href="/admin/news">News</a>
+        <a href="/admin/contacts">Contacts</a>
+      </nav>
+      <form action="/logout" method="post">
+        <button type="submit">ログアウト</button>
+      </form>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Topics</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@300;400;600;700&family=Roboto:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/stylesheets/style.css" />
+  </head>
+  <body class="admin-page">
+    <main class="admin-list">
+      <div class="admin-header">
+        <h1>Topics</h1>
+        <a class="admin-button" href="/admin/topics/new">新規作成</a>
+      </div>
+      <form class="admin-search" action="/admin/topics" method="get">
+        <input type="text" name="q" placeholder="検索" value="<%= query %>" />
+        <button type="submit">検索</button>
+      </form>
+      <form action="/admin/topics/bulk" method="post" data-admin-form>
+        <table>
+          <thead>
+            <tr>
+              <th>順序</th>
+              <th>タイトル</th>
+              <th>カテゴリ</th>
+              <th>公開</th>
+              <th>更新日</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody data-draggable-list>
+            <% topics.forEach(function(topic, index) { %>
+              <tr draggable="true" data-id="<%= topic.id %>">
+                <td>
+                  <span class="drag-handle">⋮⋮</span>
+                  <input type="hidden" name="ids" value="<%= topic.id %>" />
+                  <input type="hidden" name="published" value="<%= topic.isPublished ? 1 : 0 %>" data-published-input />
+                  <%= index + 1 %>
+                </td>
+                <td><%= topic.title %></td>
+                <td><%= topic.category ? topic.category.name : '' %></td>
+                <td>
+                  <label class="admin-checkbox">
+                    <input
+                      type="checkbox"
+                      data-published-checkbox
+                      <%= topic.isPublished ? 'checked' : '' %>
+                    />
+                    <span><%= topic.isPublished ? '公開' : '下書き' %></span>
+                  </label>
+                </td>
+                <td><%= topic.updatedAt.toISOString().slice(0, 10) %></td>
+                <td class="admin-actions">
+                  <a href="/admin/topics/<%= topic.id %>/preview">プレビュー</a>
+                  <a href="/admin/topics/<%= topic.id %>/edit">編集</a>
+                  <button type="submit" formaction="/admin/topics/<%= topic.id %>/delete" formmethod="post">削除</button>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+        <div class="admin-footer">
+          <button type="submit">並び順と公開状態を保存</button>
+        </div>
+      </form>
+      <a href="/admin" class="admin-back">ダッシュボードへ戻る</a>
+    </main>
+    <script src="/javascripts/admin.js"></script>
+  </body>
+</html>

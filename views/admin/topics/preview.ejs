@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Preview: <%= topic.title %></title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@300;400;600;700&family=Roboto:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/stylesheets/style.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="brand">
+        <span class="brand-title">PORTFOLIO</span>
+        <span class="brand-sub">PREVIEW</span>
+      </div>
+      <nav class="site-nav">
+        <a href="/admin/topics/<%= topic.id %>/edit">Edit</a>
+        <a href="/admin/topics">Back</a>
+      </nav>
+    </header>
+
+    <main class="topic-detail">
+      <div class="topic-hero">
+        <% if (topic.imageUrl) { %>
+          <img src="<%= topic.imageUrl %>" alt="<%= topic.title %>" />
+        <% } %>
+      </div>
+      <div class="topic-content">
+        <div class="topic-meta">
+          <% if (topic.category) { %>
+            <span class="topic-category"><%= topic.category.name %></span>
+          <% } %>
+          <div class="topic-tags">
+            <% topic.tags.forEach(function(tag) { %>
+              <span>#<%= tag.name %></span>
+            <% }) %>
+          </div>
+        </div>
+        <h1><%= topic.title %></h1>
+        <p class="topic-body"><%= topic.body %></p>
+        <% if (topic.link1Url || topic.link2Url) { %>
+          <div class="topic-links">
+            <% if (topic.link1Url) { %>
+              <a href="<%= topic.link1Url %>" target="_blank" rel="noopener">
+                <%= topic.link1Title || topic.link1Url %>
+              </a>
+            <% } %>
+            <% if (topic.link2Url) { %>
+              <a href="<%= topic.link2Url %>" target="_blank" rel="noopener">
+                <%= topic.link2Title || topic.link2Url %>
+              </a>
+            <% } %>
+          </div>
+        <% } %>
+      </div>
+    </main>
+  </body>
+</html>

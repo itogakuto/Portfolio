@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>News</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@300;400;600;700&family=Roboto:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/stylesheets/style.css" />
+  </head>
+  <body class="admin-page">
+    <main class="admin-list">
+      <div class="admin-header">
+        <h1>News</h1>
+        <a class="admin-button" href="/admin">ダッシュボードへ戻る</a>
+      </div>
+      <% if (error) { %>
+        <p class="admin-error"><%= error %></p>
+      <% } %>
+      <form class="admin-form" action="/admin/news" method="post">
+        <label>
+          タイトル
+          <input type="text" name="title" required />
+        </label>
+        <label>
+          サブタイトル
+          <input type="text" name="subtitle" />
+        </label>
+        <label>
+          リンク
+          <input type="url" name="url" required />
+        </label>
+        <label>
+          取材日
+          <input type="date" name="interviewDate" required />
+        </label>
+        <button type="submit">追加</button>
+      </form>
+      <form action="/admin/news/bulk" method="post" data-admin-form>
+        <table>
+          <thead>
+            <tr>
+              <th>タイトル</th>
+              <th>サブタイトル</th>
+              <th>リンク</th>
+              <th>取材日</th>
+              <th>更新日</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% news.forEach(function(item) { %>
+              <tr>
+                <td>
+                  <input type="hidden" name="ids" value="<%= item.id %>" />
+                  <input type="text" name="titles" value="<%= item.title %>" required />
+                </td>
+                <td>
+                  <input type="text" name="subtitles" value="<%= item.subtitle || '' %>" />
+                </td>
+                <td>
+                  <input type="url" name="urls" value="<%= item.url %>" required />
+                </td>
+                <td>
+                  <input type="date" name="interviewDates" value="<%= item.interviewDate.toISOString().slice(0, 10) %>" required />
+                </td>
+                <td><%= item.updatedAt.toISOString().slice(0, 10) %></td>
+                <td class="admin-actions">
+                  <button type="submit" formaction="/admin/news/<%= item.id %>/delete" formmethod="post">削除</button>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+        <div class="admin-footer">
+          <button type="submit">内容を保存</button>
+        </div>
+      </form>
+    </main>
+    <script src="/javascripts/admin.js"></script>
+  </body>
+</html>

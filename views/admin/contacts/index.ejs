@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Contacts</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@300;400;600;700&family=Roboto:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/stylesheets/style.css" />
+  </head>
+  <body class="admin-page">
+    <main class="admin-list">
+      <div class="admin-header">
+        <h1>Contacts</h1>
+        <a class="admin-button" href="/admin">ダッシュボードへ戻る</a>
+      </div>
+      <form class="admin-search" action="/admin/contacts" method="get">
+        <input type="text" name="q" placeholder="検索" value="<%= typeof query !== 'undefined' ? query : '' %>" />
+        <button type="submit">検索</button>
+      </form>
+      <table class="contacts-table">
+        <colgroup>
+          <col class="col-date" />
+          <col class="col-name" />
+          <col class="col-email" />
+          <col class="col-phone" />
+          <col class="col-message" />
+          <col class="col-action" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th>日時</th>
+            <th>名前</th>
+            <th>メール</th>
+            <th>電話番号</th>
+            <th>内容</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% contacts.forEach(function(contact) { %>
+            <tr>
+              <td><%= new Date(contact.createdAt).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo', hour12: false }) %></td>
+              <td><%= contact.name %></td>
+              <td><div class="contact-email"><%= contact.email %></div></td>
+              <td><div class="contact-phone"><%= contact.phoneNumber || '' %></div></td>
+              <td>
+                <div class="contact-message"><%= contact.message %></div>
+                <% if (contact.message.length > 60) { %>
+                  <a class="contact-more" href="/admin/contacts/<%= contact.id %>">さらに表示</a>
+                <% } %>
+              </td>
+              <td class="admin-actions">
+                <button type="button" data-confirm-delete data-form-id="delete-contact-<%= contact.id %>">削除</button>
+                <form id="delete-contact-<%= contact.id %>" action="/admin/contacts/<%= contact.id %>/delete" method="post"></form>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+      <div class="admin-modal" data-confirm-modal>
+        <div class="admin-modal-content">
+          <p>本当に削除しますか？</p>
+          <div class="admin-modal-actions">
+            <button type="button" data-confirm-cancel>キャンセル</button>
+            <button type="button" data-confirm-ok>削除する</button>
+          </div>
+        </div>
+      </div>
+      <script src="/javascripts/admin.js"></script>
+    </main>
+  </body>
+</html>

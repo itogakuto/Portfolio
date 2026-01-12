@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= topic ? 'Edit Topic' : 'New Topic' %></title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@300;400;600;700&family=Roboto:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/stylesheets/style.css" />
+  </head>
+  <body class="admin-page">
+    <main class="admin-form">
+      <h1><%= topic ? 'Topic編集' : 'Topic新規作成' %></h1>
+      <% if (error) { %>
+        <p class="admin-error"><%= error %></p>
+      <% } %>
+      <form
+        action="<%= topic ? '/admin/topics/' + topic.id : '/admin/topics' %>"
+        method="post"
+        enctype="multipart/form-data"
+      >
+        <label>
+          タイトル
+          <input type="text" name="title" value="<%= topic ? topic.title : '' %>" required />
+        </label>
+        <label>
+          抜粋
+          <input type="text" name="excerpt" value="<%= topic ? topic.excerpt || '' : '' %>" />
+        </label>
+        <label>
+          本文
+          <textarea name="body" rows="8" required><%= topic ? topic.body : '' %></textarea>
+        </label>
+        <fieldset>
+          <legend>関連リンク（最大2つ）</legend>
+          <label>
+            リンク1 タイトル
+            <input type="text" name="link1Title" value="<%= topic ? topic.link1Title || '' : '' %>" />
+          </label>
+          <label>
+            リンク1 URL
+            <input type="url" name="link1Url" value="<%= topic ? topic.link1Url || '' : '' %>" />
+          </label>
+          <label>
+            リンク2 タイトル
+            <input type="text" name="link2Title" value="<%= topic ? topic.link2Title || '' : '' %>" />
+          </label>
+          <label>
+            リンク2 URL
+            <input type="url" name="link2Url" value="<%= topic ? topic.link2Url || '' : '' %>" />
+          </label>
+        </fieldset>
+        <label>
+          カテゴリ
+          <select name="categoryId">
+            <option value="">未設定</option>
+            <% categories.forEach(function(category) { %>
+              <option
+                value="<%= category.id %>"
+                <%= topic && topic.categoryId === category.id ? 'selected' : '' %>
+              >
+                <%= category.name %>
+              </option>
+            <% }) %>
+          </select>
+        </label>
+        <fieldset>
+          <legend>タグ</legend>
+          <div class="admin-tags">
+            <% tags.forEach(function(tag) { %>
+              <label>
+                <input
+                  type="checkbox"
+                  name="tags"
+                  value="<%= tag.id %>"
+                  <%= topic && topic.tags.some(function(t) { return t.id === tag.id; }) ? 'checked' : '' %>
+                />
+                <%= tag.name %>
+              </label>
+            <% }) %>
+          </div>
+        </fieldset>
+        <label>
+          並び順
+          <input type="number" name="sortOrder" value="<%= topic ? topic.sortOrder : 0 %>" />
+        </label>
+        <label class="admin-checkbox">
+          <input
+            type="checkbox"
+            name="isPublished"
+            <%= topic ? (topic.isPublished ? 'checked' : '') : 'checked' %>
+          />
+          公開
+        </label>
+        <label>
+          画像
+          <input type="file" name="image" accept=".jpg,.jpeg,.png" />
+        </label>
+        <% if (topic && topic.imageUrl) { %>
+          <img class="admin-preview" src="<%= topic.imageUrl %>" alt="topic image" />
+        <% } %>
+        <button type="submit"><%= topic ? '更新' : '作成' %></button>
+      </form>
+      <% if (topic) { %>
+        <a href="/admin/topics/<%= topic.id %>/preview" class="admin-button">プレビュー</a>
+      <% } %>
+      <a href="/admin/topics" class="admin-back">一覧へ戻る</a>
+    </main>
+  </body>
+</html>

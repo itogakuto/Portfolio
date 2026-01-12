@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Contact Detail</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@300;400;600;700&family=Roboto:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/stylesheets/style.css" />
+  </head>
+  <body class="admin-page">
+    <main class="admin-list">
+      <div class="admin-header">
+        <h1>Contact Detail</h1>
+        <a class="admin-button" href="/admin/contacts">一覧へ戻る</a>
+      </div>
+      <div class="contact-detail">
+        <div>
+          <strong>日時:</strong>
+          <span><%= new Date(contact.createdAt).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo', hour12: false }) %></span>
+        </div>
+        <div>
+          <strong>名前:</strong>
+          <span><%= contact.name %></span>
+        </div>
+        <div>
+          <strong>メール:</strong>
+          <span><%= contact.email %></span>
+        </div>
+        <div>
+          <strong>電話番号:</strong>
+          <span><%= contact.phoneNumber || '' %></span>
+        </div>
+        <div class="contact-detail-message">
+          <strong>内容:</strong>
+          <p><%= contact.message %></p>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>

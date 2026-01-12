@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Hero Images</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@300;400;600;700&family=Roboto:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/stylesheets/style.css" />
+  </head>
+  <body class="admin-page">
+    <main class="admin-list">
+      <div class="admin-header">
+        <h1>Hero Images</h1>
+        <a class="admin-button" href="/admin">ダッシュボードへ戻る</a>
+      </div>
+      <% if (error) { %>
+        <p class="admin-error"><%= error %></p>
+      <% } %>
+      <form class="admin-form" action="/admin/hero-images" method="post" enctype="multipart/form-data">
+        <label>
+          画像
+          <input type="file" name="image" accept=".jpg,.jpeg,.png" required />
+        </label>
+        <label>
+          代替テキスト
+          <input type="text" name="altText" />
+        </label>
+        <label class="admin-checkbox">
+          <input type="checkbox" name="isPublished" checked />
+          公開
+        </label>
+        <button type="submit">追加</button>
+      </form>
+      <form action="/admin/hero-images/bulk" method="post" data-admin-form>
+        <div class="admin-grid" data-draggable-list>
+          <% images.forEach(function(image, index) { %>
+            <div class="admin-card" draggable="true">
+              <input type="hidden" name="ids" value="<%= image.id %>" />
+              <input type="hidden" name="published" value="<%= image.isPublished ? 1 : 0 %>" data-published-input />
+              <img src="<%= image.imageUrl %>" alt="<%= image.altText || 'hero image' %>" />
+              <div class="admin-card-body">
+                <p>順序: <%= index + 1 %></p>
+                <label class="admin-checkbox">
+                  <input
+                    type="checkbox"
+                    data-published-checkbox
+                    <%= image.isPublished ? 'checked' : '' %>
+                  />
+                  <span><%= image.isPublished ? '公開' : '下書き' %></span>
+                </label>
+                <button type="submit" formaction="/admin/hero-images/<%= image.id %>/delete" formmethod="post">削除</button>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+        <div class="admin-footer">
+          <button type="submit">並び順と公開状態を保存</button>
+        </div>
+      </form>
+    </main>
+    <script src="/javascripts/admin.js"></script>
+  </body>
+</html>

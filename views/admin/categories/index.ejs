@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Categories</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@300;400;600;700&family=Roboto:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/stylesheets/style.css" />
+  </head>
+  <body class="admin-page">
+    <main class="admin-list">
+      <div class="admin-header">
+        <h1>Categories</h1>
+        <a class="admin-button" href="/admin">ダッシュボードへ戻る</a>
+      </div>
+      <% if (error) { %>
+        <p class="admin-error"><%= error %></p>
+      <% } %>
+      <form class="admin-form" action="/admin/categories" method="post">
+        <label>
+          カテゴリ名
+          <input type="text" name="name" required />
+        </label>
+        <button type="submit">追加</button>
+      </form>
+      <div class="admin-hint">
+        並び替えや編集を行ったら、右下の「一括保存」を押してください。Enterキーでは保存されません。
+      </div>
+      <form action="/admin/categories/bulk" method="post" data-admin-form>
+        <table>
+          <thead>
+            <tr>
+              <th>順序</th>
+              <th>名前</th>
+              <th>更新日</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody data-draggable-list>
+            <% categories.forEach(function(category, index) { %>
+              <tr draggable="true">
+                <td>
+                  <span class="drag-handle">⋮⋮</span>
+                  <input type="hidden" name="ids" value="<%= category.id %>" />
+                  <%= index + 1 %>
+                </td>
+                <td>
+                  <input type="text" name="names" value="<%= category.name %>" required />
+                </td>
+                <td><%= category.updatedAt.toISOString().slice(0, 10) %></td>
+                <td class="admin-actions">
+                  <button type="submit" form="delete-category-<%= category.id %>">削除</button>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+        <div class="admin-footer">
+          <button type="submit">一括保存</button>
+        </div>
+      </form>
+      <% categories.forEach(function(category) { %>
+        <form id="delete-category-<%= category.id %>" action="/admin/categories/<%= category.id %>/delete" method="post"></form>
+      <% }) %>
+    </main>
+    <script src="/javascripts/admin.js"></script>
+  </body>
+</html>
