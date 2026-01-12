@@ -1,4 +1,29 @@
 document.addEventListener('DOMContentLoaded', () => {
+  const loader = document.querySelector('[data-loader]');
+  if (loader) {
+    const tilesWrap = loader.querySelector('[data-loader-tiles]');
+    const tileSize = 128;
+    if (tilesWrap) {
+      const cols = Math.ceil(window.innerWidth / tileSize);
+      const rows = Math.ceil(window.innerHeight / tileSize);
+      tilesWrap.style.gridTemplateColumns = `repeat(${cols}, ${tileSize}px)`;
+      tilesWrap.style.gridTemplateRows = `repeat(${rows}, ${tileSize}px)`;
+      const count = cols * rows;
+      for (let i = 0; i < count; i++) {
+        const tile = document.createElement('div');
+        tile.className = 'loader-tile';
+        tile.style.setProperty('--delay', `${Math.random() * 2}s`);
+        tilesWrap.appendChild(tile);
+      }
+    }
+    setTimeout(() => loader.classList.add('is-text-fade'), 1000);
+    setTimeout(() => loader.classList.add('is-tiles'), 2000);
+    setTimeout(() => {
+      loader.classList.add('is-hidden');
+      setTimeout(() => loader.remove(), 200);
+    }, 5000);
+  }
+
   const images = Array.from(document.querySelectorAll('.hero-bg-image'));
   let imageIndex = 0;
   let phraseIndex = 0;

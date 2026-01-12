@@ -23,6 +23,80 @@ body {
   text-shadow: 0 2px 2px rgba(0, 0, 0, 0.25);
 }
 
+.page-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #bbddff;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  perspective: 800px;
+}
+
+.page-loader.is-tiles {
+  background: transparent;
+}
+.page-loader.is-hidden {
+  display: none;
+}
+
+.loader-text {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Roboto', sans-serif;
+  color: #1f2a35;
+  letter-spacing: 0.2em;
+  transition: opacity 1s ease;
+}
+
+.loader-title {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.loader-sub {
+  font-size: 12px;
+  letter-spacing: 0.4em;
+}
+
+.page-loader.is-text-fade .loader-text {
+  opacity: 0;
+}
+
+.loader-tiles {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  z-index: 1;
+}
+
+.loader-tile {
+  width: 128px;
+  height: 128px;
+  background: #bbddff;
+  border: none;
+  transform: translateZ(0);
+}
+
+.page-loader.is-tiles .loader-tile {
+  animation: tileReveal 1s ease forwards;
+  animation-delay: var(--delay, 0s);
+}
+
+@keyframes tileReveal {
+  0% {
+    background: #bbddff;
+  }
+  100% {
+    background: rgba(187, 221, 255, 0);
+  }
+}
+
 
 a {
   color: inherit;
