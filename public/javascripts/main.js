@@ -105,10 +105,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const categorySelect = document.querySelector('[data-filter-category]');
   const tagSelect = document.querySelector('[data-filter-tag]');
   const topicCards = Array.from(document.querySelectorAll('[data-topic-card]'));
+  const topicsMoreButton = document.querySelector('[data-target="#topics-list"]');
 
   const applyFilter = () => {
     const categoryValue = categorySelect ? categorySelect.value.toLowerCase() : 'all';
     const tagValue = tagSelect ? tagSelect.value.toLowerCase() : 'all';
+    const isFiltered = categoryValue !== 'all' || tagValue !== 'all';
 
     topicCards.forEach((card) => {
       const cardCategory = (card.dataset.category || '').toLowerCase();
@@ -121,6 +123,19 @@ document.addEventListener('DOMContentLoaded', () => {
       const tagMatch = tagValue === 'all' || cardTags.includes(tagValue);
       card.style.display = categoryMatch && tagMatch ? '' : 'none';
     });
+
+    if (topicsMoreButton) {
+      const collapsible = document.querySelectorAll('#topics-list [data-collapsible="true"]');
+      if (isFiltered) {
+        collapsible.forEach((item) => item.classList.remove('is-collapsed'));
+        topicsMoreButton.style.display = 'none';
+      } else {
+        topicsMoreButton.style.display = collapsible.length ? '' : 'none';
+        if (topicsMoreButton.getAttribute('data-expanded') !== 'true') {
+          collapsible.forEach((item) => item.classList.add('is-collapsed'));
+        }
+      }
+    }
   };
 
   if (categorySelect || tagSelect) {
