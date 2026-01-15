@@ -4,8 +4,7 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var session = require('express-session');
-var RedisStore = require('connect-redis').RedisStore;
-var { createClient } = require('redis');
+var pgSession = require('connect-pg-simple')(session);
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
@@ -21,24 +20,17 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-var sessionStore;
-if (process.env.REDIS_URL) {
-  var redisClient = createClient({ url: process.env.REDIS_URL });
-  redisClient.on('error', function (err) {
-    console.error('Redis client error', err);
-  });
-  redisClient.connect().catch(console.error);
-  sessionStore = new RedisStore({ client: redisClient });
-} else {
-  console.warn('REDIS_URL is not set; using MemoryStore for sessions.');
-}
 
 if (process.env.NODE_ENV === 'production') {
   app.set('trust proxy', 1);
 }
 
 app.use(session({
-  store: sessionStore,
+  store: new pgSession({
+    conString: process.env.DATABASE_URL,
+    tableName: 'session',
+    createTableIfMissing: true,
+  }),
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
