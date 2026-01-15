@@ -78,7 +78,12 @@ router.post('/login', async function (req, res, next) {
       return res.render('admin/login', { error: 'メールかパスワードが違います。' });
     }
     req.session.adminId = admin.id;
-    res.redirect('/admin');
+    req.session.save(function (err) {
+      if (err) {
+        return next(err);
+      }
+      res.redirect('/admin');
+    });
   } catch (error) {
     next(error);
   }

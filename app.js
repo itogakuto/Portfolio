@@ -4,7 +4,7 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var session = require('express-session');
-var RedisStore = require('connect-redis').default;
+var RedisStore = require('connect-redis').RedisStore;
 var { createClient } = require('redis');
 
 var indexRouter = require('./routes/index');
@@ -12,7 +12,6 @@ var usersRouter = require('./routes/users');
 var adminRouter = require('./routes/admin');
 
 var app = express();
-app.set('trust proxy', 1); // ★追加（Render重要）
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -22,21 +21,33 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-var redisClient = createClient({ url: process.env.REDIS_URL });
-redisClient.connect().catch(console.error);
+var sessionStore;
+if (process.env.REDIS_URL) {
+  var redisClient = createClient({ url: process.env.REDIS_URL });
+  redisClient.on('error', function (err) {
+    console.error('Redis client error', err);
+  });
+  redisClient.connect().catch(console.error);
+  sessionStore = new RedisStore({ client: redisClient });
+} else {
+  console.warn('REDIS_URL is not set; using MemoryStore for sessions.');
+}
 
-app.use(
-  session({
-    store: new RedisStore({ client: redisClient }),
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-    },
-  })
-);
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
+
+app.use(session({
+  store: sessionStore,
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+  },
+}));
+
 
 
 app.use(express.static(path.join(__dirname, 'public')));
