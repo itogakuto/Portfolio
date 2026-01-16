@@ -3,8 +3,11 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node ./bin/www",
-    "postinstall": "npx prisma generate"
+    "start": "node ./bin/www -p 3000",
+    "postinstall": "npx prisma generate",
+    "build": "npx prisma generate && next build",
+    "dev": "next dev",
+    "seed": "node prisma/seed.js"
   },
   "dependencies": {
     "@prisma/client": "^6.19.0",
@@ -19,7 +22,10 @@
     "http-errors": "~2.0.1",
     "morgan": "~1.10.1",
     "multer": "^2.0.2",
+    "next": "^16.1.2",
     "prisma": "^6.19.0",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
     "redis": "^5.10.0"
   },
   "prisma": {
