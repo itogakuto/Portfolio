@@ -6,6 +6,14 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var session = require('express-session');
 
+// 追加
+var pg = require('pg');
+var connectPgSimple = require('connect-pg-simple');
+var PgSession = connectPgSimple(session);
+var pool = new pg.Pool({
+  connectionString: process.env.DATABASE_URL,
+});
+
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var adminRouter = require('./routes/admin');
@@ -20,13 +28,27 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+// 置き換え（store追加）
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || 'change-this-secret',
+    store: new PgSession({
+      pool: pool,
+      tableName: 'session',
+      createTableIfMissing: true,
+    }),
+    secret: process.env.SESSION_SECRET, // ← productionでは必ず環境変数にする
     resave: false,
     saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production', // HTTPSのときtrue
+      maxAge: 1000 * 60 * 60 * 24 * 7,
+    },
   })
 );
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
@@ -40,11 +62,8 @@ app.use(function(req, res, next) {
 
 // error handler
 app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
-
-  // render the error page
   res.status(err.status || 500);
   res.render('error');
 });
