@@ -3,8 +3,46 @@ var router = express.Router();
 var { PrismaClient } = require('@prisma/client');
 var https = require('https');
 var querystring = require('querystring');
+var MarkdownIt = require('markdown-it');
+var sanitizeHtml = require('sanitize-html');
 
 var prisma = new PrismaClient();
+var md = new MarkdownIt({
+  html: false,
+  linkify: true,
+  typographer: true,
+  breaks: true,
+});
+
+function renderMarkdown(input) {
+  var raw = md.render(String(input || ''));
+  return sanitizeHtml(raw, {
+    allowedTags: [
+      'h1',
+      'h2',
+      'h3',
+      'h4',
+      'p',
+      'ul',
+      'ol',
+      'li',
+      'strong',
+      'em',
+      'blockquote',
+      'code',
+      'pre',
+      'a',
+      'img',
+      'hr',
+      'br',
+    ],
+    allowedAttributes: {
+      a: ['href', 'target', 'rel'],
+      img: ['src', 'alt', 'width', 'height', 'loading'],
+    },
+    allowedSchemes: ['http', 'https', 'mailto'],
+  });
+}
 
 function postForm(url, payload) {
   var data = querystring.stringify(payload);
@@ -62,6 +100,11 @@ router.get('/', async function(req, res, next) {
     var news = await prisma.news.findMany({
       orderBy: { interviewDate: 'desc' },
     });
+    var featuredProjects = await prisma.project.findMany({
+      where: { isFeatured: true },
+      orderBy: [{ order: 'asc' }, { publishedAt: 'desc' }],
+      take: 6,
+    });
     res.render('index', {
       title: 'PORTFOLIO',
       heroImages: heroImages,
@@ -70,7 +113,37 @@ router.get('/', async function(req, res, next) {
       categories: categories,
       tags: tags,
       news: news,
+      featuredProjects: featuredProjects,
     });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get('/works', async function (req, res, next) {
+  try {
+    var projects = await prisma.project.findMany({
+      where: { publishedAt: { not: null } },
+      include: { tags: true, techStacks: true },
+      orderBy: [{ order: 'asc' }, { publishedAt: 'desc' }],
+    });
+    res.render('works/index', { title: 'Works', projects: projects });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get('/works/:slug', async function (req, res, next) {
+  try {
+    var project = await prisma.project.findUnique({
+      where: { slug: req.params.slug },
+      include: { tags: true, techStacks: true, media: true, links: true },
+    });
+    if (!project || !project.publishedAt) {
+      return res.status(404).render('error', { message: 'Not Found', error: {} });
+    }
+    var bodyHtml = renderMarkdown(project.bodyMarkdown);
+    res.render('works/detail', { title: project.title, project: project, bodyHtml: bodyHtml });
   } catch (error) {
     next(error);
   }

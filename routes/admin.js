@@ -51,6 +51,24 @@ function toArray(value) {
   return Array.isArray(value) ? value : [value];
 }
 
+function parseLines(input) {
+  return String(input || '')
+    .split('\n')
+    .map(function (line) { return line.trim(); })
+    .filter(Boolean);
+}
+
+function parseLinks(input) {
+  return parseLines(input).map(function (line, index) {
+    var parts = line.split('|').map(function (part) { return part.trim(); });
+    return {
+      label: parts[0] || 'Link',
+      url: parts[1] || parts[0] || '',
+      order: index,
+    };
+  }).filter(function (link) { return link.url; });
+}
+
 function requireAuth(req, res, next) {
   if (req.session && req.session.adminId) {
     return next();
@@ -98,6 +116,245 @@ router.post('/logout', function (req, res) {
 
 router.get('/admin', requireAuth, function (req, res) {
   res.render('admin/dashboard');
+});
+
+router.get('/admin/projects', requireAuth, async function (req, res, next) {
+  try {
+    var q = (req.query.q || '').trim();
+    var where = q
+      ? {
+          OR: [
+            { title: { contains: q, mode: 'insensitive' } },
+            { slug: { contains: q, mode: 'insensitive' } },
+          ],
+        }
+      : {};
+    var projects = await prisma.project.findMany({
+      where: where,
+      orderBy: [{ order: 'asc' }, { updatedAt: 'desc' }],
+    });
+    res.render('admin/projects/index', { projects: projects, query: q });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get('/admin/projects/new', requireAuth, async function (req, res, next) {
+  try {
+    var tags = await prisma.projectTag.findMany({ orderBy: { name: 'asc' } });
+    var techStacks = await prisma.projectTechStack.findMany({ orderBy: { name: 'asc' } });
+    res.render('admin/projects/form', {
+      project: null,
+      tags: tags,
+      techStacks: techStacks,
+      linksText: '',
+      mediaText: '',
+      error: null,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post('/admin/projects', requireAuth, async function (req, res, next) {
+  try {
+    var tagIds = toArray(req.body.tags).map(function (id) { return Number(id); });
+    var stackIds = toArray(req.body.techStacks).map(function (id) { return Number(id); });
+    var links = parseLinks(req.body.links);
+    var mediaUrls = parseLines(req.body.media);
+    var publishedAt = req.body.publishedAt ? new Date(req.body.publishedAt) : null;
+
+    await prisma.project.create({
+      data: {
+        title: req.body.title,
+        slug: req.body.slug,
+        summary: req.body.summary || null,
+        bodyMarkdown: req.body.bodyMarkdown,
+        coverImage: req.body.coverImage || null,
+        role: req.body.role || null,
+        publishedAt: publishedAt,
+        isFeatured: req.body.isFeatured === 'on',
+        order: Number(req.body.order || 0),
+        tags: { connect: tagIds.map(function (id) { return { id: id }; }) },
+        techStacks: { connect: stackIds.map(function (id) { return { id: id }; }) },
+        links: {
+          create: links,
+        },
+        media: {
+          create: mediaUrls.map(function (url, index) {
+            return {
+              type: 'IMAGE',
+              url: url,
+              order: index,
+            };
+          }),
+        },
+      },
+    });
+    res.redirect('/admin/projects');
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get('/admin/projects/:id/edit', requireAuth, async function (req, res, next) {
+  try {
+    var project = await prisma.project.findUnique({
+      where: { id: Number(req.params.id) },
+      include: { tags: true, techStacks: true, links: true, media: true },
+    });
+    if (!project) {
+      return res.redirect('/admin/projects');
+    }
+    var tags = await prisma.projectTag.findMany({ orderBy: { name: 'asc' } });
+    var techStacks = await prisma.projectTechStack.findMany({ orderBy: { name: 'asc' } });
+    var linksText = project.links
+      .sort(function (a, b) { return a.order - b.order; })
+      .map(function (link) { return link.label + '|' + link.url; })
+      .join('\n');
+    var mediaText = project.media
+      .sort(function (a, b) { return a.order - b.order; })
+      .map(function (item) { return item.url; })
+      .join('\n');
+    res.render('admin/projects/form', {
+      project: project,
+      tags: tags,
+      techStacks: techStacks,
+      linksText: linksText,
+      mediaText: mediaText,
+      error: null,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post('/admin/projects/:id', requireAuth, async function (req, res, next) {
+  try {
+    var projectId = Number(req.params.id);
+    var tagIds = toArray(req.body.tags).map(function (id) { return Number(id); });
+    var stackIds = toArray(req.body.techStacks).map(function (id) { return Number(id); });
+    var links = parseLinks(req.body.links);
+    var mediaUrls = parseLines(req.body.media);
+    var publishedAt = req.body.publishedAt ? new Date(req.body.publishedAt) : null;
+
+    await prisma.project.update({
+      where: { id: projectId },
+      data: {
+        title: req.body.title,
+        slug: req.body.slug,
+        summary: req.body.summary || null,
+        bodyMarkdown: req.body.bodyMarkdown,
+        coverImage: req.body.coverImage || null,
+        role: req.body.role || null,
+        publishedAt: publishedAt,
+        isFeatured: req.body.isFeatured === 'on',
+        order: Number(req.body.order || 0),
+        tags: { set: tagIds.map(function (id) { return { id: id }; }) },
+        techStacks: { set: stackIds.map(function (id) { return { id: id }; }) },
+        links: {
+          deleteMany: { projectId: projectId },
+          create: links,
+        },
+        media: {
+          deleteMany: { projectId: projectId },
+          create: mediaUrls.map(function (url, index) {
+            return {
+              type: 'IMAGE',
+              url: url,
+              order: index,
+            };
+          }),
+        },
+      },
+    });
+    res.redirect('/admin/projects');
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post('/admin/projects/:id/delete', requireAuth, async function (req, res, next) {
+  try {
+    var projectId = Number(req.params.id);
+    await prisma.projectLink.deleteMany({ where: { projectId: projectId } });
+    await prisma.projectMedia.deleteMany({ where: { projectId: projectId } });
+    await prisma.project.update({
+      where: { id: projectId },
+      data: {
+        tags: { set: [] },
+        techStacks: { set: [] },
+      },
+    });
+    await prisma.project.delete({ where: { id: projectId } });
+    res.redirect('/admin/projects');
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get('/admin/project-tags', requireAuth, async function (req, res, next) {
+  try {
+    var tags = await prisma.projectTag.findMany({ orderBy: { name: 'asc' } });
+    res.render('admin/project-tags/index', { tags: tags });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post('/admin/project-tags', requireAuth, async function (req, res, next) {
+  try {
+    await prisma.projectTag.create({
+      data: {
+        name: req.body.name,
+        slug: req.body.slug,
+      },
+    });
+    res.redirect('/admin/project-tags');
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post('/admin/project-tags/:id/delete', requireAuth, async function (req, res, next) {
+  try {
+    await prisma.projectTag.delete({ where: { id: Number(req.params.id) } });
+    res.redirect('/admin/project-tags');
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get('/admin/project-stacks', requireAuth, async function (req, res, next) {
+  try {
+    var stacks = await prisma.projectTechStack.findMany({ orderBy: { name: 'asc' } });
+    res.render('admin/project-stacks/index', { stacks: stacks });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post('/admin/project-stacks', requireAuth, async function (req, res, next) {
+  try {
+    await prisma.projectTechStack.create({
+      data: {
+        name: req.body.name,
+        slug: req.body.slug,
+      },
+    });
+    res.redirect('/admin/project-stacks');
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post('/admin/project-stacks/:id/delete', requireAuth, async function (req, res, next) {
+  try {
+    await prisma.projectTechStack.delete({ where: { id: Number(req.params.id) } });
+    res.redirect('/admin/project-stacks');
+  } catch (error) {
+    next(error);
+  }
 });
 
 router.get('/admin/topics', requireAuth, async function (req, res, next) {

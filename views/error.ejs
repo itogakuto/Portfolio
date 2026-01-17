@@ -1,3 +1,25 @@
-<h1><%= message %></h1>
-<h2><%= error.status %></h2>
-<pre><%= error.stack %></pre>
+<!DOCTYPE html>
+<html>
+  <%- include('partials/head', { title: 'Error' }) %>
+  <body data-page="error">
+    <%- include('partials/site-header', { brandSubtitle: 'Gakuto Ito' }) %>
+
+    <main id="swup" class="swup-transition error-page" data-swup>
+      <section class="section">
+        <div class="section-inner">
+          <p class="eyebrow">Error</p>
+          <h1><%= message %></h1>
+          <% if (error && error.status) { %>
+            <p class="error-code">Status: <%= error.status %></p>
+          <% } %>
+          <% if (error && error.stack) { %>
+            <pre class="error-stack"><%= error.stack %></pre>
+          <% } %>
+        </div>
+      </section>
+    </main>
+
+    <%- include('partials/site-footer') %>
+    <%- include('partials/scripts') %>
+  </body>
+</html>

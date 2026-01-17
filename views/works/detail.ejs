@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+  <%- include('../partials/head', { title: title }) %>
+  <body data-page="work-detail">
+    <%- include('../partials/site-header', { brandSubtitle: 'Gakuto Ito' }) %>
+
+    <main id="swup" class="swup-transition work-detail" data-swup>
+      <section class="section work-hero" data-reveal>
+        <div class="section-inner">
+          <p class="eyebrow"><%= project.role || 'Project' %></p>
+          <h1><%= project.title %></h1>
+          <p class="lead"><%= project.summary || '' %></p>
+          <div class="work-meta">
+            <% if (project.publishedAt) { %>
+              <span><%= project.publishedAt.toISOString().slice(0, 10) %></span>
+            <% } %>
+            <% project.techStacks.forEach(function(stack) { %>
+              <span><%= stack.name %></span>
+            <% }) %>
+          </div>
+        </div>
+      </section>
+
+      <section class="section work-media" data-reveal>
+        <div class="section-inner">
+          <% if (project.coverImage) { %>
+            <img class="work-cover" src="<%= project.coverImage %>" alt="<%= project.title %>" loading="lazy" />
+          <% } %>
+        </div>
+      </section>
+
+      <section class="section work-body" data-reveal>
+        <div class="section-inner">
+          <div class="markdown-body"><%- bodyHtml %></div>
+          <% if (project.links.length) { %>
+            <div class="work-links">
+              <% project.links.forEach(function(link) { %>
+                <a href="<%= link.url %>" target="_blank" rel="noopener"><%= link.label %></a>
+              <% }) %>
+            </div>
+          <% } %>
+        </div>
+      </section>
+    </main>
+
+    <%- include('../partials/site-footer') %>
+    <%- include('../partials/scripts') %>
+  </body>
+</html>

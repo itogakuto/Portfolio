@@ -1,4 +1,14 @@
-document.addEventListener('DOMContentLoaded', () => {
+const PortfolioApp = (() => {
+  let cleanupFns = [];
+
+  const init = () => {
+    cleanupFns.forEach((fn) => fn());
+    cleanupFns = [];
+
+    const controller = new AbortController();
+    const signal = controller.signal;
+    cleanupFns.push(() => controller.abort());
+
   const loader = document.querySelector('[data-loader]');
   if (loader) {
     const tilesWrap = loader.querySelector('[data-loader-tiles]');
@@ -16,12 +26,82 @@ document.addEventListener('DOMContentLoaded', () => {
         tilesWrap.appendChild(tile);
       }
     }
-    setTimeout(() => loader.classList.add('is-text-fade'), 1000);
-    setTimeout(() => loader.classList.add('is-tiles'), 2000);
-    setTimeout(() => {
+    const textTimer = setTimeout(() => loader.classList.add('is-text-fade'), 1000);
+    const tilesTimer = setTimeout(() => loader.classList.add('is-tiles'), 2000);
+    const hideTimer = setTimeout(() => {
       loader.classList.add('is-hidden');
       setTimeout(() => loader.remove(), 200);
     }, 5000);
+    cleanupFns.push(() => {
+      clearTimeout(textTimer);
+      clearTimeout(tilesTimer);
+      clearTimeout(hideTimer);
+    });
+  }
+
+  if (window.Lenis) {
+    const lenis = new window.Lenis({
+      lerp: 0.08,
+      smoothWheel: true,
+      smoothTouch: false,
+    });
+    if (window.ScrollTrigger) {
+      lenis.on('scroll', window.ScrollTrigger.update);
+    }
+    let lenisRaf = null;
+    const raf = (time) => {
+      lenis.raf(time);
+      lenisRaf = requestAnimationFrame(raf);
+    };
+    lenisRaf = requestAnimationFrame(raf);
+    cleanupFns.push(() => {
+      cancelAnimationFrame(lenisRaf);
+      lenis.destroy();
+    });
+  }
+
+  if (window.gsap && window.ScrollTrigger) {
+    window.gsap.registerPlugin(window.ScrollTrigger);
+    const revealTargets = window.gsap.utils.toArray('[data-reveal]');
+    revealTargets.forEach((el) => {
+      window.gsap.fromTo(
+        el,
+        { opacity: 0, y: 30 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.9,
+          ease: 'power3.out',
+          scrollTrigger: {
+            trigger: el,
+            start: 'top 80%',
+            once: true,
+          },
+        }
+      );
+    });
+
+    if (document.body.dataset.page === 'works') {
+      window.gsap.utils.toArray('.work-card').forEach((card, index) => {
+        window.gsap.fromTo(
+          card,
+          { opacity: 0.2, z: -120 },
+          {
+            opacity: 1,
+            z: 0,
+            duration: 1,
+            ease: 'power2.out',
+            scrollTrigger: {
+              trigger: card,
+              start: 'top 80%',
+            },
+          }
+        );
+      });
+    }
+    cleanupFns.push(() => {
+      window.ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
+    });
   }
 
   const bgCanvas = document.querySelector('[data-bg-gl]');
@@ -29,22 +109,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const BG_CONFIG = {
       minCount: 40,
       maxCount: 120,
-      density: 22000,
-      maxPixelRatio: 1.8,
-      colors: [0x0a0f1a, 0xe7edf5, 0x1a2f86],
-      clearColor: 0x05070c,
-      fogColor: 0x05070c,
-      fogNear: 12,
-      fogFar: 32,
-      coreRadius: 0.32,
-      armRadius: 0.24,
-      armLength: 1.1,
-      driftSpeed: 0.12,
-      rotationSpeed: 0.18,
-      bounds: { x: 8.5, y: 6, z: 7.5 },
-      cameraRadius: 10,
-      cameraSpeed: 0.08,
-      cameraBob: 0.35,
+      density: 20000,
+      maxPixelRatio: 1.5,
+      depth: 24,
+      lanes: 6,
+      laneRadius: 6.5,
+      baseSpeed: 0.12,
+      drift: 0.3,
+      mouseIntensity: 1.2,
     };
 
     const renderer = new window.THREE.WebGLRenderer({
@@ -53,22 +125,11 @@ document.addEventListener('DOMContentLoaded', () => {
       antialias: true,
     });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, BG_CONFIG.maxPixelRatio));
-    renderer.setClearColor(BG_CONFIG.clearColor, 1);
-    renderer.outputColorSpace = window.THREE.SRGBColorSpace;
+    renderer.setClearColor(0x05070c, 1);
 
     const scene = new window.THREE.Scene();
-    scene.fog = new window.THREE.Fog(BG_CONFIG.fogColor, BG_CONFIG.fogNear, BG_CONFIG.fogFar);
-
-    const camera = new window.THREE.PerspectiveCamera(35, 1, 0.1, 60);
-
-    const ambient = new window.THREE.AmbientLight(0xffffff, 0.35);
-    scene.add(ambient);
-    const keyLight = new window.THREE.DirectionalLight(0x9bb3ff, 1.1);
-    keyLight.position.set(6, 6, 4);
-    scene.add(keyLight);
-    const rimLight = new window.THREE.PointLight(0x4b6bff, 1.2, 30);
-    rimLight.position.set(-6, -3, -4);
-    scene.add(rimLight);
+    const camera = new window.THREE.PerspectiveCamera(40, 1, 0.1, 100);
+    camera.position.set(0, 0, 14);
 
     const count = Math.min(
       BG_CONFIG.maxCount,
@@ -78,73 +139,118 @@ document.addEventListener('DOMContentLoaded', () => {
       )
     );
 
-    const material = new window.THREE.MeshStandardMaterial({
-      color: 0xffffff,
-      metalness: 0.6,
-      roughness: 0.18,
-      vertexColors: true,
-    });
-
-    const coreGeometry = new window.THREE.SphereGeometry(BG_CONFIG.coreRadius, 16, 16);
-    const armGeometry = new window.THREE.CylinderGeometry(
-      BG_CONFIG.armRadius,
-      BG_CONFIG.armRadius,
-      BG_CONFIG.armLength,
-      16,
-      1
-    );
-    const armGeometryX = armGeometry.clone();
-    armGeometryX.rotateZ(Math.PI / 2);
-    const armGeometryZ = armGeometry.clone();
-    armGeometryZ.rotateX(Math.PI / 2);
-
-    const coreMesh = new window.THREE.InstancedMesh(coreGeometry, material, count);
-    const armMeshY = new window.THREE.InstancedMesh(armGeometry, material, count);
-    const armMeshX = new window.THREE.InstancedMesh(armGeometryX, material, count);
-    const armMeshZ = new window.THREE.InstancedMesh(armGeometryZ, material, count);
-    [coreMesh, armMeshX, armMeshY, armMeshZ].forEach((mesh) => {
-      mesh.instanceMatrix.setUsage(window.THREE.DynamicDrawUsage);
-      scene.add(mesh);
-    });
-
-    const palette = BG_CONFIG.colors.map((hex) => new window.THREE.Color(hex));
-    const states = [];
-    const dummy = new window.THREE.Object3D();
+    const positions = new Float32Array(count * 3);
+    const speeds = new Float32Array(count);
+    const lanes = new Float32Array(count);
+    const phases = new Float32Array(count);
+    const alphas = new Float32Array(count);
 
     for (let i = 0; i < count; i += 1) {
-      const color = palette[Math.floor(Math.random() * palette.length)];
-      coreMesh.setColorAt(i, color);
-      armMeshX.setColorAt(i, color);
-      armMeshY.setColorAt(i, color);
-      armMeshZ.setColorAt(i, color);
-
-      states.push({
-        position: new window.THREE.Vector3(
-          (Math.random() - 0.5) * BG_CONFIG.bounds.x * 2,
-          (Math.random() - 0.5) * BG_CONFIG.bounds.y * 2,
-          (Math.random() - 0.5) * BG_CONFIG.bounds.z * 2
-        ),
-        velocity: new window.THREE.Vector3(
-          (Math.random() - 0.5) * BG_CONFIG.driftSpeed,
-          (Math.random() - 0.5) * BG_CONFIG.driftSpeed,
-          (Math.random() - 0.5) * BG_CONFIG.driftSpeed
-        ),
-        rotation: new window.THREE.Euler(
-          Math.random() * Math.PI,
-          Math.random() * Math.PI,
-          Math.random() * Math.PI
-        ),
-        rotationSpeed: new window.THREE.Vector3(
-          (Math.random() - 0.5) * BG_CONFIG.rotationSpeed,
-          (Math.random() - 0.5) * BG_CONFIG.rotationSpeed,
-          (Math.random() - 0.5) * BG_CONFIG.rotationSpeed
-        ),
-      });
+      const lane = i % BG_CONFIG.lanes;
+      const radius = BG_CONFIG.laneRadius * (0.5 + lane / BG_CONFIG.lanes);
+      const angle = Math.random() * Math.PI * 2;
+      positions[i * 3] = Math.cos(angle) * radius;
+      positions[i * 3 + 1] = Math.sin(angle) * radius;
+      positions[i * 3 + 2] = (Math.random() - 0.5) * BG_CONFIG.depth;
+      speeds[i] = BG_CONFIG.baseSpeed * (0.6 + Math.random());
+      lanes[i] = radius;
+      phases[i] = Math.random() * Math.PI * 2;
+      alphas[i] = 0.6 + Math.random() * 0.4;
     }
-    coreMesh.instanceColor.needsUpdate = true;
-    armMeshX.instanceColor.needsUpdate = true;
-    armMeshY.instanceColor.needsUpdate = true;
-    armMeshZ.instanceColor.needsUpdate = true;
+
+    const geometry = new window.THREE.BufferGeometry();
+    geometry.setAttribute('position', new window.THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute('aAlpha', new window.THREE.BufferAttribute(alphas, 1));
+    geometry.setAttribute('aPhase', new window.THREE.BufferAttribute(phases, 1));
+
+    const vertexShader = `
+        attribute float aAlpha;
+        attribute float aPhase;
+        uniform float uTime;
+        uniform vec2 uMouse;
+        varying float vAlpha;
+        varying float vPhase;
+        varying vec2 vUv;
+        void main() {
+          vAlpha = aAlpha;
+          vPhase = aPhase;
+          vUv = position.xy * 0.04 + uMouse * 0.3;
+          vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+          gl_PointSize = 10.0 + 8.0 * (1.0 - abs(mvPosition.z) / 12.0);
+          gl_Position = projectionMatrix * mvPosition;
+        }
+      `;
+    const fragmentShader = `
+        precision highp float;
+        varying float vAlpha;
+        varying float vPhase;
+        varying vec2 vUv;
+        uniform float uBoost;
+        float hash(vec2 p) {
+          return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+        }
+        float noise(vec2 p) {
+          vec2 i = floor(p);
+          vec2 f = fract(p);
+          float a = hash(i);
+          float b = hash(i + vec2(1.0, 0.0));
+          float c = hash(i + vec2(0.0, 1.0));
+          float d = hash(i + vec2(1.0, 1.0));
+          vec2 u = f * f * (3.0 - 2.0 * f);
+          return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+        }
+        void main() {
+          vec2 coord = gl_PointCoord - 0.5;
+          float dist = length(coord);
+          float mask = smoothstep(0.5, 0.15, dist);
+          float n = noise(vUv * 6.0 + vPhase);
+          float stripe = sin((coord.x + coord.y) * 12.0 + n * 6.0) * 0.5 + 0.5;
+          vec3 base = vec3(0.15, 0.35, 0.95);
+          vec3 alt = vec3(0.85, 0.9, 1.0);
+          vec3 color = mix(base, alt, stripe);
+          color.r += sin(n + vPhase) * 0.1;
+          color.b += cos(n + vPhase) * 0.1;
+          gl_FragColor = vec4(color * uBoost, mask * vAlpha);
+        }
+      `;
+
+    const material = new window.THREE.ShaderMaterial({
+      transparent: true,
+      depthWrite: false,
+      uniforms: {
+        uTime: { value: 0 },
+        uMouse: { value: new window.THREE.Vector2(0.5, 0.5) },
+        uBoost: { value: 1.0 },
+      },
+      vertexShader: vertexShader,
+      fragmentShader: fragmentShader,
+    });
+
+    const points = new window.THREE.Points(geometry, material);
+    scene.add(points);
+
+    const sparkCount = Math.max(30, Math.floor(count * 0.4));
+    const sparkPositions = new Float32Array(sparkCount * 3);
+    const sparkAlphas = new Float32Array(sparkCount);
+    const sparkPhases = new Float32Array(sparkCount);
+    const sparkLife = new Float32Array(sparkCount);
+    const sparkGeometry = new window.THREE.BufferGeometry();
+    sparkGeometry.setAttribute('position', new window.THREE.BufferAttribute(sparkPositions, 3));
+    sparkGeometry.setAttribute('aAlpha', new window.THREE.BufferAttribute(sparkAlphas, 1));
+    sparkGeometry.setAttribute('aPhase', new window.THREE.BufferAttribute(sparkPhases, 1));
+    const sparkMaterial = new window.THREE.ShaderMaterial({
+      transparent: true,
+      depthWrite: false,
+      uniforms: {
+        uTime: { value: 0 },
+        uMouse: { value: new window.THREE.Vector2(0.5, 0.5) },
+        uBoost: { value: 1.6 },
+      },
+      vertexShader: vertexShader,
+      fragmentShader: fragmentShader,
+    });
+    const sparks = new window.THREE.Points(sparkGeometry, sparkMaterial);
+    scene.add(sparks);
 
     const resize = () => {
       const { clientWidth, clientHeight } = bgCanvas;
@@ -153,66 +259,75 @@ document.addEventListener('DOMContentLoaded', () => {
       camera.updateProjectionMatrix();
     };
     resize();
-    window.addEventListener('resize', resize);
+    window.addEventListener('resize', resize, { signal });
 
+    let mouse = new window.THREE.Vector2(0.5, 0.5);
+    let sparkIndex = 0;
+    window.addEventListener(
+      'pointermove',
+      (event) => {
+        const mx = event.clientX / window.innerWidth;
+        const my = 1 - event.clientY / window.innerHeight;
+        mouse.set(mx, my);
+        const ix = sparkIndex % sparkCount;
+        sparkPositions[ix * 3] = (mx - 0.5) * BG_CONFIG.laneRadius * 1.2;
+        sparkPositions[ix * 3 + 1] = (my - 0.5) * BG_CONFIG.laneRadius * 0.9;
+        sparkPositions[ix * 3 + 2] = -4 + Math.random() * 2;
+        sparkAlphas[ix] = 1;
+        sparkPhases[ix] = Math.random() * Math.PI * 2;
+        sparkLife[ix] = 1;
+        sparkIndex += 1;
+      },
+      { signal }
+    );
+
+    let bgRaf = null;
     const clock = new window.THREE.Clock();
-    let animationId = null;
-
     const animate = () => {
-      const delta = Math.min(clock.getDelta(), 0.05);
       const time = clock.getElapsedTime();
+      material.uniforms.uTime.value = time;
+      material.uniforms.uMouse.value.lerp(mouse, 0.08);
+      sparkMaterial.uniforms.uTime.value = time;
+      sparkMaterial.uniforms.uMouse.value.lerp(mouse, 0.1);
 
-      const orbit = time * BG_CONFIG.cameraSpeed;
-      camera.position.set(
-        Math.cos(orbit) * BG_CONFIG.cameraRadius,
-        Math.sin(time * 0.3) * BG_CONFIG.cameraBob + 0.5,
-        Math.sin(orbit) * BG_CONFIG.cameraRadius
-      );
-      camera.lookAt(0, 0, 0);
+      for (let i = 0; i < count; i += 1) {
+        const radius = lanes[i];
+        const angle = time * speeds[i] + phases[i];
+        positions[i * 3] = Math.cos(angle) * radius + Math.sin(time * 0.2 + i) * BG_CONFIG.drift;
+        positions[i * 3 + 1] = Math.sin(angle) * radius + Math.cos(time * 0.25 + i) * BG_CONFIG.drift;
+        positions[i * 3 + 2] += speeds[i] * 0.3;
+        if (positions[i * 3 + 2] > BG_CONFIG.depth * 0.5) {
+          positions[i * 3 + 2] = -BG_CONFIG.depth * 0.5;
+        }
+      }
 
-      states.forEach((state, index) => {
-        state.position.addScaledVector(state.velocity, delta * 60);
-        state.rotation.x += state.rotationSpeed.x * delta;
-        state.rotation.y += state.rotationSpeed.y * delta;
-        state.rotation.z += state.rotationSpeed.z * delta;
+      for (let i = 0; i < sparkCount; i += 1) {
+        if (sparkLife[i] <= 0) {
+          sparkAlphas[i] = 0;
+          continue;
+        }
+        sparkLife[i] -= 0.03;
+        sparkAlphas[i] = Math.max(sparkLife[i], 0);
+        sparkPositions[i * 3 + 2] += 0.05;
+      }
 
-        if (state.position.x > BG_CONFIG.bounds.x) state.position.x = -BG_CONFIG.bounds.x;
-        if (state.position.x < -BG_CONFIG.bounds.x) state.position.x = BG_CONFIG.bounds.x;
-        if (state.position.y > BG_CONFIG.bounds.y) state.position.y = -BG_CONFIG.bounds.y;
-        if (state.position.y < -BG_CONFIG.bounds.y) state.position.y = BG_CONFIG.bounds.y;
-        if (state.position.z > BG_CONFIG.bounds.z) state.position.z = -BG_CONFIG.bounds.z;
-        if (state.position.z < -BG_CONFIG.bounds.z) state.position.z = BG_CONFIG.bounds.z;
-
-        dummy.position.copy(state.position);
-        dummy.rotation.set(state.rotation.x, state.rotation.y, state.rotation.z);
-        dummy.updateMatrix();
-        coreMesh.setMatrixAt(index, dummy.matrix);
-        armMeshX.setMatrixAt(index, dummy.matrix);
-        armMeshY.setMatrixAt(index, dummy.matrix);
-        armMeshZ.setMatrixAt(index, dummy.matrix);
-      });
-
-      coreMesh.instanceMatrix.needsUpdate = true;
-      armMeshX.instanceMatrix.needsUpdate = true;
-      armMeshY.instanceMatrix.needsUpdate = true;
-      armMeshZ.instanceMatrix.needsUpdate = true;
-
+      geometry.attributes.position.needsUpdate = true;
+      sparkGeometry.attributes.position.needsUpdate = true;
+      sparkGeometry.attributes.aAlpha.needsUpdate = true;
       renderer.render(scene, camera);
-      animationId = requestAnimationFrame(animate);
+      bgRaf = requestAnimationFrame(animate);
     };
     animate();
 
-    const cleanup = () => {
-      cancelAnimationFrame(animationId);
+    cleanupFns.push(() => {
+      cancelAnimationFrame(bgRaf);
       window.removeEventListener('resize', resize);
-      coreGeometry.dispose();
-      armGeometry.dispose();
-      armGeometryX.dispose();
-      armGeometryZ.dispose();
+      geometry.dispose();
+      sparkGeometry.dispose();
       material.dispose();
+      sparkMaterial.dispose();
       renderer.dispose();
-    };
-    window.addEventListener('beforeunload', cleanup);
+    });
   }
 
   const images = Array.from(document.querySelectorAll('.hero-bg-image'));
@@ -220,11 +335,12 @@ document.addEventListener('DOMContentLoaded', () => {
   let phraseIndex = 0;
 
   if (images.length > 1) {
-    setInterval(() => {
+    const heroInterval = setInterval(() => {
       images[imageIndex].classList.remove('is-active');
       imageIndex = (imageIndex + 1) % images.length;
       images[imageIndex].classList.add('is-active');
     }, 3000);
+    cleanupFns.push(() => clearInterval(heroInterval));
   }
 
   const heroBoxes = Array.from(document.querySelectorAll('.hero-boxes .hero-box'));
@@ -310,10 +426,11 @@ document.addEventListener('DOMContentLoaded', () => {
       };
 
       setBoxesForPhrase(phrases[0]);
-      setInterval(() => {
+      const phraseInterval = setInterval(() => {
         phraseIndex = (phraseIndex + 1) % phrases.length;
         setBoxesForPhrase(phrases[phraseIndex]);
       }, 3000);
+      cleanupFns.push(() => clearInterval(phraseInterval));
     }
 
   }
@@ -354,13 +471,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  if (categorySelect || tagSelect) {
-    if (categorySelect) {
-      categorySelect.addEventListener('change', applyFilter);
-    }
-    if (tagSelect) {
-      tagSelect.addEventListener('change', applyFilter);
-    }
+  if (categorySelect) {
+    categorySelect.addEventListener('change', applyFilter, { signal });
+  }
+  if (tagSelect) {
+    tagSelect.addEventListener('change', applyFilter, { signal });
   }
 
   document.querySelectorAll('[data-show-more]').forEach((button) => {
@@ -384,7 +499,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       button.textContent = 'さらに表示↑';
       button.setAttribute('data-expanded', 'true');
-    });
+    }, { signal });
   });
 
   const heroCanvas = document.querySelector('[data-hero-gl]');
@@ -493,7 +608,7 @@ document.addEventListener('DOMContentLoaded', () => {
       uniforms.uResolution.value.set(width, height);
     };
     resize();
-    window.addEventListener('resize', resize);
+    window.addEventListener('resize', resize, { signal });
 
     let targetMouse = new window.THREE.Vector2(0.5, 0.5);
     let currentMouse = new window.THREE.Vector2(0.5, 0.5);
@@ -502,9 +617,10 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('mousemove', (event) => {
       targetMouse.set(event.clientX / window.innerWidth, 1.0 - event.clientY / window.innerHeight);
       lastMove = Date.now();
-    });
+    }, { signal });
 
     const clock = new window.THREE.Clock();
+    let rafId = null;
     const animate = () => {
       uniforms.uTime.value = clock.getElapsedTime();
       const toTarget = targetMouse.clone().sub(currentMouse);
@@ -526,9 +642,16 @@ document.addEventListener('DOMContentLoaded', () => {
         strengths[i] *= 0.92;
       }
       renderer.render(scene, camera);
-      requestAnimationFrame(animate);
+      rafId = requestAnimationFrame(animate);
     };
     animate();
+    cleanupFns.push(() => {
+      cancelAnimationFrame(rafId);
+      window.removeEventListener('resize', resize);
+      renderer.dispose();
+      geometry.dispose();
+      material.dispose();
+    });
   }
 
   const tetrapodWrap = document.querySelector('[data-tetrapod-wrap]');
@@ -692,13 +815,13 @@ document.addEventListener('DOMContentLoaded', () => {
       hasPointer = true;
     };
 
-    tetrapodWrap.addEventListener('pointermove', handlePointer);
+    tetrapodWrap.addEventListener('pointermove', handlePointer, { signal });
     tetrapodWrap.addEventListener('pointerleave', () => {
       target.x = 0;
       target.y = 0;
       pointerSpeed = 0;
       hasPointer = false;
-    });
+    }, { signal });
 
     const resize = () => {
       const { clientWidth, clientHeight } = tetrapodWrap;
@@ -707,7 +830,7 @@ document.addEventListener('DOMContentLoaded', () => {
       camera.updateProjectionMatrix();
     };
     resize();
-    window.addEventListener('resize', resize);
+    window.addEventListener('resize', resize, { signal });
 
     const clock = new window.THREE.Clock();
     const resolveCollisions = () => {
@@ -748,6 +871,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     };
 
+    let tetrapodRaf = null;
     const animate = () => {
       const delta = 0.08;
       current.x += (target.x - current.x) * delta;
@@ -815,8 +939,44 @@ document.addEventListener('DOMContentLoaded', () => {
       resolveCollisions();
 
       renderer.render(scene, camera);
-      requestAnimationFrame(animate);
+      tetrapodRaf = requestAnimationFrame(animate);
     };
     animate();
+    cleanupFns.push(() => {
+      cancelAnimationFrame(tetrapodRaf);
+      window.removeEventListener('resize', resize);
+      renderer.dispose();
+    });
   }
-});
+  };
+
+  const destroy = () => {
+    cleanupFns.forEach((fn) => fn());
+    cleanupFns = [];
+  };
+
+  return { init, destroy };
+})();
+
+const boot = () => {
+  PortfolioApp.init();
+};
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', boot);
+} else {
+  boot();
+}
+
+if (window.Swup) {
+  const swup = new window.Swup({
+    containers: ['#swup'],
+    linkSelector: 'a[href]:not([data-no-swup])',
+  });
+  swup.on('contentReplaced', () => {
+    PortfolioApp.init();
+    if (window.ScrollTrigger) {
+      window.ScrollTrigger.refresh();
+    }
+  });
+}

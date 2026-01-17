@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Projects</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght;400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/stylesheets/style.css" />
+  </head>
+  <body class="admin-page">
+    <main class="admin-list">
+      <h1>Projects</h1>
+      <form class="admin-search" method="get" action="/admin/projects">
+        <input type="text" name="q" value="<%= query || '' %>" placeholder="検索..." />
+        <button type="submit">検索</button>
+      </form>
+      <a class="admin-button" href="/admin/projects/new">新規作成</a>
+      <ul class="admin-list-grid">
+        <% projects.forEach(function(project) { %>
+          <li>
+            <div>
+              <strong><%= project.title %></strong>
+              <p><%= project.slug %></p>
+            </div>
+            <div class="admin-actions">
+              <a href="/admin/projects/<%= project.id %>/edit">編集</a>
+              <form action="/admin/projects/<%= project.id %>/delete" method="post">
+                <button type="submit">削除</button>
+              </form>
+            </div>
+          </li>
+        <% }) %>
+      </ul>
+      <a href="/admin" class="admin-back">ダッシュボード</a>
+    </main>
+  </body>
+</html>

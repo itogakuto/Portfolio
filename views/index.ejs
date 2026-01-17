@@ -1,18 +1,7 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title><%= title %></title>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@300;400;600;700&family=Roboto:wght@400;500;700&display=swap"
-      rel="stylesheet"
-    />
-    <link rel='stylesheet' href='/stylesheets/style.css' />
-  </head>
-  <body>
+  <%- include('partials/head', { title: title }) %>
+  <body data-page="home">
     <div class="page-loader" data-loader>
       <div class="loader-text">
         <span class="loader-title">PORTFOLIO</span>
@@ -21,20 +10,9 @@
       <div class="loader-tiles" data-loader-tiles></div>
     </div>
     <div id="top"></div>
-    <header class="site-header">
-      <div class="brand">
-        <span class="brand-title">PORTFOLIO</span>
-        <span class="brand-sub">Gakuto Ito</span>
-      </div>
-      <nav class="site-nav">
-        <a href="#top">Home</a>
-        <a href="#about">About</a>
-        <a href="#topics">Topics</a>
-        <a href="#contact">Contact</a>
-      </nav>
-    </header>
+    <%- include('partials/site-header', { brandSubtitle: 'Gakuto Ito' }) %>
 
-    <main>
+    <main id="swup" class="swup-transition" data-swup>
       <% const heroRand = function(input) { 
            const str = String(input || '');
            let hash = 0;
@@ -57,7 +35,7 @@
            return scales[bucket];
          };
       %>
-      <section id="home" class="hero">
+      <section id="home" class="hero" data-reveal>
         <div class="hero-bg">
           <% if (heroImages.length === 0) { %>
             <div class="hero-bg-placeholder"></div>
@@ -112,7 +90,7 @@
         </div>
       </section>
 
-      <section class="message">
+      <section class="message" data-reveal>
         <div class="message-inner">
           <div class="message-text">
             <p>
@@ -128,7 +106,41 @@
         </div>
       </section>
 
-      <section id="about" class="about">
+      <section class="section works-preview" data-reveal>
+        <div class="section-inner">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">Works</p>
+              <h2>実装力の証明</h2>
+            </div>
+            <a class="section-link" href="/works">すべてのWorksを見る</a>
+          </div>
+          <div class="works-preview-grid">
+            <% if (featuredProjects && featuredProjects.length) { %>
+              <% featuredProjects.forEach(function(project) { %>
+                <a class="work-card" href="/works/<%= project.slug %>">
+                  <div class="work-card-media">
+                    <% if (project.coverImage) { %>
+                      <img src="<%= project.coverImage %>" alt="<%= project.title %>" loading="lazy" />
+                    <% } else { %>
+                      <div class="work-card-placeholder">No image</div>
+                    <% } %>
+                  </div>
+                  <div class="work-card-body">
+                    <p class="work-card-eyebrow"><%= project.role || 'Project' %></p>
+                    <h3><%= project.title %></h3>
+                    <p><%= project.summary || '' %></p>
+                  </div>
+                </a>
+              <% }) %>
+            <% } else { %>
+              <p class="muted">準備中です。</p>
+            <% } %>
+          </div>
+        </div>
+      </section>
+
+      <section id="about" class="about" data-reveal>
         <h2>About</h2>
         <div class="about-card">
           <div class="about-text">
@@ -147,7 +159,7 @@
         </div>
       </section>
 
-      <section id="topics" class="topics">
+      <section id="topics" class="topics" data-reveal>
         <div class="topics-header">
           <h2>Topics</h2>
           <div class="topics-filter">
@@ -207,7 +219,7 @@
         <% } %>
       </section>
 
-      <section id="news" class="news">
+      <section id="news" class="news" data-reveal>
         <h2>News</h2>
         <% if (news.length === 0) { %>
           <p class="news-empty">準備中です。</p>
@@ -234,7 +246,7 @@
         <% } %>
       </section>
 
-      <section id="contact" class="contact">
+      <section id="contact" class="contact" data-reveal>
         <h2>Contact</h2>
         <form class="contact-form" action="/contact" method="post">
           <label>
@@ -260,10 +272,7 @@
     <canvas class="background-gl-canvas" data-bg-gl></canvas>
     <div class="background-vignette" aria-hidden="true"></div>
     <canvas class="hero-gl-canvas" data-hero-gl></canvas>
-    <footer class="site-footer">
-      <p>@2026 Gakuto Ito</p>
-    </footer>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
-    <script src="/javascripts/main.js"></script>
+    <%- include('partials/site-footer') %>
+    <%- include('partials/scripts') %>
   </body>
 </html>

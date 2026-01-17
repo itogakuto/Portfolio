@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= project ? 'Edit Project' : 'New Project' %></title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght;400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/stylesheets/style.css" />
+  </head>
+  <body class="admin-page">
+    <main class="admin-form">
+      <h1><%= project ? 'Project編集' : 'Project新規作成' %></h1>
+      <% if (error) { %>
+        <p class="admin-error"><%= error %></p>
+      <% } %>
+      <form action="<%= project ? '/admin/projects/' + project.id : '/admin/projects' %>" method="post">
+        <label>
+          タイトル
+          <input type="text" name="title" value="<%= project ? project.title : '' %>" required />
+        </label>
+        <label>
+          スラッグ
+          <input type="text" name="slug" value="<%= project ? project.slug : '' %>" required />
+        </label>
+        <label>
+          サマリー
+          <textarea name="summary" rows="3"><%= project ? project.summary || '' : '' %></textarea>
+        </label>
+        <label>
+          本文（Markdown）
+          <textarea name="bodyMarkdown" rows="10" required><%= project ? project.bodyMarkdown : '' %></textarea>
+        </label>
+        <label>
+          カバー画像（public配下のパス）
+          <input type="text" name="coverImage" value="<%= project ? project.coverImage || '' : '' %>" />
+        </label>
+        <label>
+          役割
+          <input type="text" name="role" value="<%= project ? project.role || '' : '' %>" />
+        </label>
+        <label>
+          公開日
+          <input type="date" name="publishedAt" value="<%= project && project.publishedAt ? project.publishedAt.toISOString().slice(0, 10) : '' %>" />
+        </label>
+        <label>
+          並び順
+          <input type="number" name="order" value="<%= project ? project.order : 0 %>" />
+        </label>
+        <label class="admin-checkbox">
+          <input type="checkbox" name="isFeatured" <%= project && project.isFeatured ? 'checked' : '' %> />
+          注目
+        </label>
+        <fieldset>
+          <legend>Tags</legend>
+          <div class="admin-tags">
+            <% tags.forEach(function(tag) { %>
+              <label>
+                <input
+                  type="checkbox"
+                  name="tags"
+                  value="<%= tag.id %>"
+                  <%= project && project.tags.some(function(t) { return t.id === tag.id; }) ? 'checked' : '' %>
+                />
+                <%= tag.name %>
+              </label>
+            <% }) %>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Tech Stacks</legend>
+          <div class="admin-tags">
+            <% techStacks.forEach(function(stack) { %>
+              <label>
+                <input
+                  type="checkbox"
+                  name="techStacks"
+                  value="<%= stack.id %>"
+                  <%= project && project.techStacks.some(function(t) { return t.id === stack.id; }) ? 'checked' : '' %>
+                />
+                <%= stack.name %>
+              </label>
+            <% }) %>
+          </div>
+        </fieldset>
+        <label>
+          リンク（1行に「ラベル|URL」）
+          <textarea name="links" rows="4"><%= linksText || '' %></textarea>
+        </label>
+        <label>
+          メディア（1行にURL、画像のみ）
+          <textarea name="media" rows="4"><%= mediaText || '' %></textarea>
+        </label>
+        <button type="submit"><%= project ? '更新' : '作成' %></button>
+      </form>
+      <a href="/admin/projects" class="admin-back">一覧へ戻る</a>
+    </main>
+  </body>
+</html>

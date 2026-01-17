@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+  <%- include('../partials/head', { title: title }) %>
+  <body data-page="works">
+    <%- include('../partials/site-header', { brandSubtitle: 'Gakuto Ito' }) %>
+
+    <main id="swup" class="swup-transition works-page" data-swup>
+      <section class="section works-hero" data-reveal>
+        <div class="section-inner">
+          <p class="eyebrow">Works</p>
+          <h1>実装力で魅せるプロジェクト集</h1>
+          <p class="lead">
+            Web3のような高密度UIと、ビジネス成果に直結する実装力を示す実験場です。
+          </p>
+        </div>
+      </section>
+
+      <section class="section works-grid" data-reveal>
+        <div class="section-inner grid-inner">
+          <% if (projects.length === 0) { %>
+            <p class="muted">公開中のプロジェクトがありません。</p>
+          <% } else { %>
+            <% projects.forEach(function(project) { %>
+              <a class="work-card" href="/works/<%= project.slug %>">
+                <div class="work-card-media">
+                  <% if (project.coverImage) { %>
+                    <img src="<%= project.coverImage %>" alt="<%= project.title %>" loading="lazy" />
+                  <% } else { %>
+                    <div class="work-card-placeholder">No image</div>
+                  <% } %>
+                </div>
+                <div class="work-card-body">
+                  <p class="work-card-eyebrow"><%= project.role || 'Project' %></p>
+                  <h3><%= project.title %></h3>
+                  <p><%= project.summary || '' %></p>
+                  <div class="work-card-tags">
+                    <% project.techStacks.slice(0, 3).forEach(function(stack) { %>
+                      <span><%= stack.name %></span>
+                    <% }) %>
+                  </div>
+                </div>
+              </a>
+            <% }) %>
+          <% } %>
+        </div>
+      </section>
+    </main>
+
+    <%- include('../partials/site-footer') %>
+    <%- include('../partials/scripts') %>
+  </body>
+</html>

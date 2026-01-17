@@ -1,32 +1,10 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title><%= topic.title %></title>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@300;400;600;700&family=Roboto:wght@400;500;700&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="/stylesheets/style.css" />
-  </head>
-  <body>
-    <header class="site-header">
-      <div class="brand">
-        <span class="brand-title">PORTFOLIO</span>
-        <span class="brand-sub">PORTFOLIO</span>
-      </div>
-      <nav class="site-nav">
-        <a href="/#home">Home</a>
-        <a href="/#about">About</a>
-        <a href="/#topics">Topics</a>
-        <a href="/#contact">Contact</a>
-      </nav>
-    </header>
+  <%- include('partials/head', { title: topic.title }) %>
+  <body data-page="topic">
+    <%- include('partials/site-header', { brandSubtitle: 'PORTFOLIO' }) %>
 
-    <main class="topic-detail">
+    <main id="swup" class="swup-transition topic-detail" data-swup>
       <div class="topic-hero">
         <% if (topic.imageUrl) { %>
           <img src="<%= topic.imageUrl %>" alt="<%= topic.title %>" />
@@ -66,5 +44,7 @@
         </p>
       </div>
     </main>
+    <%- include('partials/site-footer') %>
+    <%- include('partials/scripts') %>
   </body>
 </html>

@@ -102,3 +102,75 @@ model NewsConfig {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+enum ProjectMediaType {
+  IMAGE
+  VIDEO
+}
+
+model Project {
+  id           Int               @id @default(autoincrement())
+  title        String
+  slug         String            @unique
+  summary      String?
+  bodyMarkdown String
+  coverImage   String?
+  publishedAt  DateTime?
+  isFeatured   Boolean           @default(false)
+  order        Int               @default(0)
+  role         String?
+  tags         ProjectTag[]      @relation("ProjectTags")
+  techStacks   ProjectTechStack[] @relation("ProjectTechStacks")
+  media        ProjectMedia[]
+  links        ProjectLink[]
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+}
+
+model ProjectTag {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  slug      String    @unique
+  projects  Project[] @relation("ProjectTags")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model ProjectTechStack {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  slug      String    @unique
+  projects  Project[] @relation("ProjectTechStacks")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model ProjectMedia {
+  id        Int             @id @default(autoincrement())
+  project   Project         @relation(fields: [projectId], references: [id])
+  projectId Int
+  type      ProjectMediaType
+  url       String
+  alt       String?
+  width     Int?
+  height    Int?
+  order     Int             @default(0)
+  poster    String?
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  @@index([projectId])
+}
+
+model ProjectLink {
+  id        Int      @id @default(autoincrement())
+  project   Project  @relation(fields: [projectId], references: [id])
+  projectId Int
+  label     String
+  url       String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId])
+}

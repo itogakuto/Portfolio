@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Project Tech Stacks</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght;400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/stylesheets/style.css" />
+  </head>
+  <body class="admin-page">
+    <main class="admin-list">
+      <h1>Project Tech Stacks</h1>
+      <form action="/admin/project-stacks" method="post" class="admin-inline">
+        <input type="text" name="name" placeholder="技術名" required />
+        <input type="text" name="slug" placeholder="slug" required />
+        <button type="submit">追加</button>
+      </form>
+      <ul class="admin-list-grid">
+        <% stacks.forEach(function(stack) { %>
+          <li>
+            <div>
+              <strong><%= stack.name %></strong>
+              <p><%= stack.slug %></p>
+            </div>
+            <form action="/admin/project-stacks/<%= stack.id %>/delete" method="post">
+              <button type="submit">削除</button>
+            </form>
+          </li>
+        <% }) %>
+      </ul>
+      <a href="/admin" class="admin-back">ダッシュボード</a>
+    </main>
+  </body>
+</html>
