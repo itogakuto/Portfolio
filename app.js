@@ -28,8 +28,8 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.set("trust proxy", 1);
 
-// 置き換え（store追加）
 app.use(
   session({
     store: new PgSession({
@@ -43,7 +43,7 @@ app.use(
     cookie: {
       httpOnly: true,
       sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production', // HTTPSのときtrue
+      secure: 'auto',
       maxAge: 1000 * 60 * 60 * 24 * 7,
     },
   })
@@ -69,6 +69,3 @@ app.use(function(err, req, res, next) {
 });
 
 module.exports = app;
-
-const port = process.env.PORT || 3000;
-app.listen(port, "0.0.0.0", () => console.log(`listening on ${port}`));
