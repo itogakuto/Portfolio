@@ -67,18 +67,24 @@ router.get('/login', function (req, res) {
 
 router.post('/login', async function (req, res, next) {
   try {
+    var email = String(req.body.email || '').trim().toLowerCase();
+    var password = String(req.body.password || '');
+
     var admin = await prisma.admin.findUnique({
-      where: { email: req.body.email },
+      where: { email: email },
     });
+
     if (!admin) {
       return res.render('admin/login', { error: 'メールかパスワードが違います。' });
     }
-    var ok = await bcrypt.compare(req.body.password, admin.passwordHash);
+
+    var ok = await bcrypt.compare(password, admin.passwordHash);
     if (!ok) {
       return res.render('admin/login', { error: 'メールかパスワードが違います。' });
     }
+
     req.session.adminId = admin.id;
-    res.redirect('/admin');
+    return res.redirect('/admin');
   } catch (error) {
     next(error);
   }
